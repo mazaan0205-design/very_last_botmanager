@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Account Settings - BotManager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
-        .bg-primary { background-color: #4F46E5; } /* indigo-600 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC;
+        }
+
+        .bg-primary {
+            background-color: #4F46E5;
+        }
+
+        /* indigo-600 */
     </style>
 </head>
+
 <body class="flex">
 
     <!-- Sidebar -->
@@ -22,31 +32,41 @@
             </div>
             <h1 class="text-xl font-bold text-slate-900">BotManager</h1>
         </div>
-        
+
         <nav class="flex-1 flex flex-col gap-1">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-all text-sm font-medium">
+            <a href="{{ route('dashboard') }}"
+                class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all">
                 <span class="material-symbols-outlined">dashboard</span> Dashboard
             </a>
-            <a href="{{ route('bot.config') }}" class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-all text-sm font-medium">
+
+            <a href="{{ isset($bot) ? route('bot-config', ['id' => $bot->id]) : route('bot-config', ['id' => 'new']) }}"
+                class="flex items-center gap-3 px-4 py-2 text-indigo-600 bg-indigo-50 rounded-lg font-medium transition-all">
                 <span class="material-symbols-outlined">settings</span> Configuration
             </a>
-            <a href="{{ route('knowledge.base') }}" class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-all text-sm font-medium">
+
+            <a href="{{ isset($bot) ? route('knowledge', ['id' => $bot->id]) : '#' }}"
+                class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all">
                 <span class="material-symbols-outlined">database</span> Knowledge Base
             </a>
-            <a href="{{ route('test.preview') }}" class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-all text-sm font-medium">
+
+            <a href="{{ isset($bot) ? route('preview', ['bot_id' => $bot->id]) : '#' }}"
+                class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all">
                 <span class="material-symbols-outlined">chat_bubble</span> Test Preview
             </a>
         </nav>
 
         <!-- Footer Section -->
         <div class="mt-auto pt-4 border-t border-slate-200 flex flex-col gap-1">
-            <a href="{{ route('bot.config') }}" class="w-full mb-4 py-2.5 bg-primary text-white rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all font-semibold text-sm">
+            <a href="{{ route('bot.config') }}"
+                class="w-full mb-4 py-2.5 bg-primary text-white rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all font-semibold text-sm">
                 <span class="material-symbols-outlined text-[20px]">add</span> Create New Bot
             </a>
-            <a href="{{ route('documentation') }}" class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-all text-sm font-medium">
+            <a href="{{ route('documentation') }}"
+                class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-all text-sm font-medium">
                 <span class="material-symbols-outlined">menu_book</span> Documentation
             </a>
-            <a href="{{ route('account') }}" class="flex items-center gap-3 px-4 py-2 text-indigo-600 bg-indigo-50 rounded-lg transition-all text-sm font-medium">
+            <a href="{{ route('account') }}"
+                class="flex items-center gap-3 px-4 py-2 text-indigo-600 bg-indigo-50 rounded-lg transition-all text-sm font-medium">
                 <span class="material-symbols-outlined">person</span> Account
             </a>
         </div>
@@ -69,11 +89,14 @@
                 <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label>
-                        <input type="text" class="w-full px-4 py-2 border border-slate-200 rounded-lg bg-slate-50 font-medium" value="Ayzm Abbas" readonly>
+                        <input type="text"
+                            class="w-full px-4 py-2 border border-slate-200 rounded-lg bg-slate-50 font-medium"
+                            value="Ayzm Abbas" readonly>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Email Address</label>
-                        <input type="email" class="w-full px-4 py-2 border border-slate-200 rounded-lg" placeholder="ayzam.abbas@university.edu">
+                        <input type="email" class="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                            placeholder="ayzam.abbas@university.edu">
                     </div>
                 </div>
             </section>
@@ -88,13 +111,18 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1">OpenAI API Key</label>
                         <div class="flex gap-2">
-                            <input type="password" class="flex-1 px-4 py-2 border border-slate-200 rounded-lg bg-slate-50" value="••••••••••••••••">
-                            <button class="px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm font-medium transition-colors">Show</button>
+                            <input type="password"
+                                class="flex-1 px-4 py-2 border border-slate-200 rounded-lg bg-slate-50"
+                                value="••••••••••••••••">
+                            <button
+                                class="px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm font-medium transition-colors">Show</button>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">FastAPI / ChromaDB URL</label>
-                        <input type="text" class="w-full px-4 py-2 border border-slate-200 rounded-lg" placeholder="http://127.0.0.1:8000">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">FastAPI / ChromaDB
+                            URL</label>
+                        <input type="text" class="w-full px-4 py-2 border border-slate-200 rounded-lg"
+                            placeholder="http://127.0.0.1:8000">
                     </div>
                 </div>
             </section>
@@ -116,11 +144,14 @@
             </section>
 
             <div class="flex justify-end gap-3 pt-4">
-                <button class="px-6 py-2 border border-slate-200 rounded-lg text-slate-600 font-bold hover:bg-slate-50">Cancel</button>
-                <button class="px-6 py-2 bg-primary text-white rounded-lg font-bold hover:opacity-90">Save Settings</button>
+                <button
+                    class="px-6 py-2 border border-slate-200 rounded-lg text-slate-600 font-bold hover:bg-slate-50">Cancel</button>
+                <button class="px-6 py-2 bg-primary text-white rounded-lg font-bold hover:opacity-90">Save
+                    Settings</button>
             </div>
         </div>
     </main>
 
 </body>
+
 </html>

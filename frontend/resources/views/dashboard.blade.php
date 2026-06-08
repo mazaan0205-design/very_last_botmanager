@@ -168,44 +168,46 @@
                 <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">v2.4.0</p>
             </div>
         </div>
-        <nav class="flex flex-col gap-1 flex-1">
-            <a class="flex items-center gap-3 px-4 py-2 text-indigo-600 bg-indigo-50 rounded-lg font-medium"
-                href="#">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span class="font-label-md">Dashboard</span>
+        <nav class="flex-1 flex flex-col gap-1">
+            <a href="{{ route('dashboard') }}"
+                class="flex items-center gap-3 px-4 py-2 rounded-lg transition-all
+   {{ request()->routeIs('dashboard') ? 'text-indigo-600 bg-indigo-50 font-medium' : 'text-slate-600 hover:bg-slate-200/50' }}">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
             </a>
-            <a class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all font-medium"
-                href="#">
-                <span class="material-symbols-outlined">settings</span>
-                <span class="font-label-md">Configuration</span>
+
+            <a href="{{ route('bot-config', ['id' => $bot->id]) }}"
+                class="flex items-center gap-3 px-4 py-2 rounded-lg transition-all
+   {{ request()->routeIs('bot-config') ? 'text-indigo-600 bg-indigo-50 font-medium' : 'text-slate-600 hover:bg-slate-200/50' }}">
+                <span class="material-symbols-outlined">settings</span> Configuration
             </a>
-            <a class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all font-medium"
-                href="#">
-                <span class="material-symbols-outlined">database</span>
-                <span class="font-label-md">Knowledge Base</span>
+
+            <a href="{{ route('knowledge', ['id' => $bot->id]) }}"
+                class="flex items-center gap-3 px-4 py-2 rounded-lg transition-all
+   {{ request()->routeIs('knowledge') ? 'text-indigo-600 bg-indigo-50 font-medium' : 'text-slate-600 hover:bg-slate-200/50' }}">
+                <span class="material-symbols-outlined">database</span> Knowledge Base
             </a>
-            <a class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all font-medium"
-                href="#">
-                <span class="material-symbols-outlined">chat_bubble</span>
-                <span class="font-label-md">Test Preview</span>
+
+            <a href="{{ route('preview', ['id' => $bot->id]) }}"
+                class="flex items-center gap-3 px-4 py-2 rounded-lg transition-all
+   {{ request()->routeIs('preview') ? 'text-indigo-600 bg-indigo-50 font-medium' : 'text-slate-600 hover:bg-slate-200/50' }}">
+                <span class="material-symbols-outlined">chat_bubble</span> Test Preview
             </a>
         </nav>
-        <div class="mt-auto pt-6 border-t border-slate-200 flex flex-col gap-1">
-            <button
-                class="w-full mb-4 py-3 px-4 bg-primary text-on-primary rounded-lg font-label-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-                <span class="material-symbols-outlined text-sm">add</span>
-                Create New Bot
-            </button>
-            <a class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all font-medium"
-                href="#">
-                <span class="material-symbols-outlined">menu_book</span>
-                <span class="font-label-md">Documentation</span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all font-medium"
-                href="#">
-                <span class="material-symbols-outlined">person</span>
-                <span class="font-label-md">Account</span>
-            </a>
+        <a href="{{ route('bot-config', ['id' => 'new']) }}"
+            class="w-full mb-4 py-3 px-4 bg-indigo-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all">
+            <span class="material-symbols-outlined text-sm">add</span>
+            Create New Bot
+        </a>
+        <a class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all font-medium"
+            href="#">
+            <span class="material-symbols-outlined">menu_book</span>
+            <span class="font-label-md">Documentation</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all font-medium"
+            href="#">
+            <span class="material-symbols-outlined">person</span>
+            <span class="font-label-md">Account</span>
+        </a>
         </div>
     </aside>
     <!-- TopNavBar Anchor -->
@@ -257,11 +259,11 @@
                         <span class="material-symbols-outlined text-lg">filter_list</span>
                         Filter
                     </button>
-                    <button
-                        class="px-4 py-2 bg-primary text-on-primary rounded-lg font-label-md hover:opacity-90 transition-opacity flex items-center gap-2 shadow-sm">
-                        <span class="material-symbols-outlined text-lg">add</span>
+                    <a href="{{ route('bot-config', ['id' => 'new']) }}"
+                        class="w-full mb-4 py-3 px-4 bg-indigo-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all">
+                        <span class="material-symbols-outlined text-sm">add</span>
                         Create New Bot
-                    </button>
+                    </a>
                 </div>
             </div>
             <!-- Bento Grid Stats Section -->
@@ -304,7 +306,7 @@
                 </div>
             </div>
             <!-- Chatbot Cards Grid -->
-            <div class="border border-3 border-[red] grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-gutter">
+            <div class="border border-3 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-gutter">
                 <!-- Card 1: Online -->
                 <div
                     class="bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group">
@@ -603,23 +605,38 @@
     </button>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('sidebar-backdrop');
-            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        function openEmbedModal(botId) {
+            const modal = document.getElementById('embed-modal');
+            const textarea = document.getElementById('modal-snippet');
 
-            function toggleSidebar() {
-                if (sidebar && backdrop) {
-                    sidebar.classList.toggle('-translate-x-full');
-                    backdrop.classList.toggle('hidden');
-                }
-            }
+            // This injects your exact requested structure with the dynamic botId
+            textarea.value = `<script>
+                          window.BotManagerConfig = {
+                            botId: "${botId}",
+                            backendUrl: "http://127.0.0.1:8001"
+                          };
+                        <script src="http://127.0.0.1:8001/static/widget.js" async>
+    </script>`;
 
-            if (mobileMenuBtn && backdrop) {
-                mobileMenuBtn.addEventListener('click', toggleSidebar);
-                backdrop.addEventListener('click', toggleSidebar);
-            }
-        });
+    modal.classList.remove('hidden');
+    }
+
+    function closeEmbedModal() {
+    document.getElementById('embed-modal').classList.add('hidden');
+    }
+
+    function copySnippet() {
+    const area = document.getElementById("modal-snippet");
+    // Ensure the textarea is visible/focused before selecting
+    area.select();
+    document.execCommand("copy");
+
+    // Visual feedback
+    const btn = document.querySelector('button[onclick="copySnippet()"]');
+    const originalText = btn.innerText;
+    btn.innerText = "Copied!";
+    setTimeout(() => btn.innerText = originalText, 2000);
+    }
     </script>
 </body>
 

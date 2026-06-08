@@ -27,7 +27,7 @@ class BotController extends Controller
 
         $totalActiveBots = count($bots);
         $totalInteractions = 0;
-        
+
         if (is_array($bots)) {
             foreach ($bots as $botItem) {
                 $totalInteractions += $botItem->statistics->conversations ?? 0;
@@ -35,25 +35,19 @@ class BotController extends Controller
         }
 
         $bot = !empty($bots) ? $bots[0] : (object) [
-            'id' => 'new', 
-            'name' => 'No Bots Found', 
-            'description' => '', 
+            'id' => 'new',
+            'name' => 'No Bots Found',
+            'description' => '',
             'instructions' => ''
         ];
 
         return view('dashboard', compact('bots', 'bot', 'totalActiveBots', 'totalInteractions'));
     }
 
-    // Knowledge Base Loader
-    public function knowledgeBase($bot_id) 
+    public function knowledge($id) // Changed from $bot_id to $id
     {
-        $response = Http::get($this->apiUrl . '/bots/' . $bot_id);
-
-        if ($response->successful()) {
-            $bot = json_decode($response->body());
-        } else {
-            $bot = (object) ['id' => $bot_id, 'name' => 'Bot Not Found'];
-        }
+        $response = Http::get($this->apiUrl . '/bots/' . $id);
+        $bot = $response->successful() ? json_decode($response->body()) : (object) ['id' => $id, 'name' => 'Bot Not Found'];
 
         return view('knowledge-base', compact('bot'));
     }
@@ -92,8 +86,12 @@ class BotController extends Controller
     public function account() { return view('account'); }
 
     // Test Preview
-    public function showPreview($bot_id)
+    // Change 'showPreview' to 'preview'
+public function showPreview($id) // Changed from $bot_id to $id
     {
-        return view('test-preview', compact('bot_id'));
+        $response = Http::get($this->apiUrl . '/bots/' . $id);
+        $bot = $response->successful() ? json_decode($response->body()) : (object)['id' => $id];
+
+        return view('test-preview', compact('bot'));
     }
 }
