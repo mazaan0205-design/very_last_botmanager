@@ -350,24 +350,21 @@
          * Dynamic Configuration Embed Script Generator
          */
         function openEmbedModal(botId) {
-            const modal = document.getElementById('embed-modal');
-            const codeBox = document.getElementById('embed-code-box');
+    const modal = document.getElementById('embed-modal');
+    const codeBox = document.getElementById('embed-code-box');
 
-            const sOpen = '<script>';
-            const sClose = '</' + 'script>';
-
-            const configurationSnippet =
-`${sOpen}
+    // FIX: Clean, single-string template with properly formed tags
+    const configurationSnippet = `<script>
   window.BotManagerConfig = {
     botId: "${botId}",
     apiUrl: "http://127.0.0.1:8001"
   };
-${sClose}
-${sOpen} src="http://127.0.0.1:8001/embed/widget.js" defer>${sClose}`;
+<\/script>
+<script src="http://127.0.0.1:8001/embed/widget.js" defer><\/script>`;
 
-            codeBox.innerText = configurationSnippet;
-            modal.classList.remove('hidden');
-        }
+    codeBox.innerText = configurationSnippet;
+    modal.classList.remove('hidden');
+}
 
         function closeEmbedModal() {
             document.getElementById('embed-modal').classList.add('hidden');
