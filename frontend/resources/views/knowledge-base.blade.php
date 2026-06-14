@@ -328,154 +328,93 @@
             </div>
         </main>
 
-        <script>
-            // Sidebar logic remains the same
-            document.addEventListener('DOMContentLoaded', () => {
-                const sidebar = document.getElementById('sidebar');
-                const backdrop = document.getElementById('sidebar-backdrop');
-                const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+       <script>
+    // Load sources on page ready
+    document.addEventListener('DOMContentLoaded', loadSources);
 
-                function toggleSidebar() {
-                    if (sidebar && backdrop) {
-                        sidebar.classList.toggle('-translate-x-full');
-                        backdrop.classList.toggle('hidden');
-                    }
-                }
+    // Upload logic
+    async function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
 
-                if (mobileMenuBtn && backdrop) {
-                    mobileMenuBtn.addEventListener('click', toggleSidebar);
-                    backdrop.addEventListener('click', toggleSidebar);
-                }
+        const botId = "{{ isset($bot) ? $bot->id : '' }}";
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch(`http://127.0.0.1:8001/bots/${botId}/knowledge/upload`, {
+                method: 'POST',
+                body: formData,
             });
 
-            // Unified handleFileUpload function
-            async function handleFileUpload(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const botId = "{{ isset($bot) ? $bot->id : 'null' }}";
-                if (botId === 'null' || botId === '') {
-                    alert("Error: Bot ID is missing. Cannot upload file.");
-                    return;
-                }
-
-                const formData = new FormData();
-                formData.append('file', file);
-
-                try {
-                    const response = await fetch(`http://127.0.0.1:8001/bots/${botId}/knowledge/upload`, {
-                        method: 'POST',
-                        body: formData,
-                    });
-
-                    const result = await response.json().catch(() => ({}));
-
-                    if (response.ok) {
-                        alert('File uploaded successfully!');
-
-                        // Update UI without reloading
-                        const tableBody = document.getElementById('sources-table-body');
-                        if (tableBody) {
-                            const fileSize = (file.size / 1024 / 1024).toFixed(2) + ' MB';
-                            const newRow = `
-                    <tr class="hover:bg-slate-50 transition-colors group">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-indigo-50 text-indigo-600 flex items-center justify-center rounded-lg">
-                                    <span class="material-symbols-outlined">description</span>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-slate-900">${file.name}</p>
-                                    <p class="text-xs text-slate-500">Just now</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4"><span class="px-2 py-1 bg-slate-100 rounded-full text-xs">FILE</span></td>
-                        <td class="px-6 py-4 text-sm text-slate-600">${fileSize}</td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="px-2 py-1 bg-green-50 text-green-700 text-xs rounded-full">Ready</span>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <button class="text-slate-400 hover:text-red-600"><span class="material-symbols-outlined">delete</span></button>
-                        </td>
-                    </tr>`;
-
-                            tableBody.insertAdjacentHTML('afterbegin', newRow);
-                        }
-                    } else {
-                        console.error("Server error:", result);
-                        alert('Upload failed: ' + (result.message || 'Check browser console.'));
-                    }
-                } catch (error) {
-                    console.error('Fetch Error:', error);
-                    alert('Could not connect to the upload server.');
-                }
+            if (response.ok) {
+                alert('File uploaded successfully!');
+                await loadSources();
+            } else {
+                alert('Upload failed. Check backend logs for 500 error.');
             }
+        } catch (error) {
+            console.error('Upload Error:', error);
+            alert('Upload server connection error.');
+        }
+    }
 
-            async function loadSources() {
-    const tableBody = document.getElementById('sources-table-body');
-    const pathParts = window.location.pathname.split('/');
-    const botId = pathParts[2]; // Assuming /bots/{botId}/knowledge
+    // Refresh the table with correct UI styling
+    async function loadSources() {
+        const tableBody = document.getElementById('sources-table-body');
+        const botId = "{{ isset($bot) ? $bot->id : '' }}";
 
-    try {
-        const response = await fetch(`http://127.0.0.1:8001/bots/${botId}/knowledge`);
-        const sources = await response.json();
+        try {
+            const response = await fetch(`http://127.0.0.1:8001/bots/${botId}/knowledge`);
+            if (!response.ok) throw new Error("Fetch failed");
 
-        tableBody.innerHTML = '';
+            const sources = await response.json();
+            tableBody.innerHTML = '';
 
-        sources.forEach(source => {
-            const row = `
-            <tr class="hover:bg-slate-50">
-                <td class="px-6 py-4">
-                    <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-slate-400">description</span>
-                        <div>
-                            <p class="font-medium text-slate-900">${source.name}</p>
-                            <p class="text-xs text-slate-500">${source.type}</p>
+            sources.forEach(source => {
+                // Ensure source.name is defined
+                const fileName = source.name || 'Unknown File';
+                const row = `
+                <tr class="hover:bg-slate-50 border-b">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-slate-400">description</span>
+                            <span class="font-medium text-slate-900">${fileName}</span>
                         </div>
-                    </div>
-                </td>
-                <td class="px-6 py-4 text-sm text-slate-600">${source.size} MB</td>
-                <td class="px-6 py-4">
-                    <span class="px-2 py-1 bg-green-50 text-green-700 rounded text-xs font-medium">Ready</span>
-                </td>
-                <td class="px-6 py-4 text-right">
-                    <button onclick="deleteSource('${botId}', '${source.id}')"
-                            class="text-slate-400 hover:text-red-600 transition-colors">
-                        <span class="material-symbols-outlined">delete</span>
-                    </button>
-                </td>
-            </tr>`;
-            tableBody.innerHTML += row;
-        });
-    } catch (error) {
-        console.error("Error loading sources:", error);
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="deleteSource('${botId}', '${fileName}')"
+                                class="text-slate-400 hover:text-red-600 transition-colors">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        } catch (error) {
+            console.error("Error loading sources:", error);
+        }
     }
-}
 
-// Function to handle the deletion
-async function deleteSource(botId, sourceId) {
-    if (!confirm("Are you sure you want to delete this source?")) return;
+    // Delete logic matching API documentation
+    async function deleteSource(botId, fileName) {
+        if (!confirm("Are you sure you want to delete " + fileName + "?")) return;
 
-    try {
-        // NOTE: Ensure your friend provides this endpoint!
-        const response = await fetch(`http://127.0.0.1:8001/bots/${botId}/knowledge/${sourceId}`, {
-            method: 'DELETE'
-        });
+        try {
+            const response = await fetch(`http://127.0.0.1:8001/bots/${botId}/knowledge/${encodeURIComponent(fileName)}`, {
+                method: 'DELETE'
+            });
 
-        if (!response.ok) throw new Error('Delete failed');
-
-        alert("Deleted successfully!");
-        loadSources(); // Refresh table
-    } catch (error) {
-        console.error("Delete Error:", error);
-        alert("Could not delete. Check if the endpoint exists.");`
+            if (response.ok) {
+                alert("Deleted successfully!");
+                await loadSources();
+            } else {
+                alert("Failed to delete. Check server logs.");
+            }
+        } catch (error) {
+            console.error("Delete Error:", error);
+        }
     }
-}
-
-// Initialize
-document.addEventListener('DOMContentLoaded', loadSources);
-        </script>
+</script>
 </body>
-
 </html>

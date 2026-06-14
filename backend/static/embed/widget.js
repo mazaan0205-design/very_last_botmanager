@@ -1,5 +1,4 @@
 (function() {
-    console.log('running iife')
     // 1. Inject Floating Bubble Styles directly onto the host website
     const style = document.createElement('style');
     style.innerHTML = `
@@ -21,7 +20,6 @@
 
     // 2. Create Widget Markup Structures
     const config = window.BotManagerConfig || { botId: 'new', backendUrl: 'http://127.0.0.1:8001' };
-
     let session_id = null;
 
     const container = document.createElement('div');
@@ -68,7 +66,7 @@
         const typingIndicator = appendMessage('bot', 'Thinking...');
 
         try {
-            const response = await fetch(`${config.apiUrl}/bots/${config.botId}/chat`, {
+            const response = await fetch(`${config.backendUrl}/bots/${config.botId}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: text, session_id: session_id, history: [] })

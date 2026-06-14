@@ -1,11 +1,13 @@
 import uuid
 import uvicorn
 import os
+import io
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Dict, Any, Optional
+from pypdf import PdfReader
 import database
 import ai_service
 
@@ -20,28 +22,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount the static folder where widget.js is located
-# Assuming your folder structure is: /project/static/embed/widget.js
-app.mount("/embed", StaticFiles(directory="static/embed"), name="embed")
-
-# Initialize the SQLite database tables
+# Initialize the SQLite database tables (Bypasses PostgreSQL connection drops)
 database.init_db()
 
-# Mount the static directory to serve widget.js to user websites
+# Mount the static folders safely
 STATIC_DIR = os.path.dirname(os.path.abspath(__file__))
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+try:
+    app.mount("/embed", StaticFiles(directory="static/embed"), name="embed")
+except Exception:
+    pass
 
 # --- REQUEST PAYLOAD SCHEMAS ---
 class BotConfigPayload(BaseModel):
     name: str
     description: Optional[str] = "Active AI Automation Agent"
-    instructions: Optional[str] = "You are a helpful AI assistant."
+    instructions: str = Field(default="You are a helpful AI assistant.", validation_alias="system_instruction")
     engine: Optional[str] = "llama-3.3-70b-versatile"
     temperature: Optional[float] = 0.3
     guardrails: Optional[bool] = True
 
-    # Allows extra keys from the Laravel UI (Greetings, variables) without crashing
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
 class ChatPayload(BaseModel):
     message: str
@@ -49,6 +50,10 @@ class ChatPayload(BaseModel):
     history: List[Dict[str, str]] = []
 
     model_config = ConfigDict(extra="allow")
+
+class UrlImportRequest(BaseModel):
+    bot_id: str
+    url: str
 
 
 # --- BOT CONFIGURATION ROUTES ---
@@ -79,7 +84,7 @@ async def save_or_modify_bot_profile(bot_id: str, payload: BotConfigPayload):
     else:
         safe_description = payload.description
 
-    safe_instructions = payload.instructions if payload.instructions is not None else "You are a helpful AI assistant."
+    safe_instructions = payload.instructions
     guardrail_flag = 1 if payload.guardrails else 0
 
     saved_successfully = database.save_bot(
@@ -116,36 +121,90 @@ async def upload_bot_knowledge_file(bot_id: str, file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Please save your bot before uploading document files.")
 
     try:
+        filename = file.filename.lower()
         contents = await file.read()
-        text_content = contents.decode("utf-8")
+        text_content = ""
 
-        # Chunk text by double newlines (paragraphs)
+        if filename.endswith(".pdf"):
+            try:
+                pdf_stream = io.BytesIO(contents)
+                pdf_reader = PdfReader(pdf_stream)
+                extracted_pages = []
+                for page in pdf_reader.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        extracted_pages.append(page_text)
+                text_content = "\n\n".join(extracted_pages)
+            except Exception as pdf_err:
+                raise HTTPException(status_code=400, detail=f"Failed to extract text from PDF: {str(pdf_err)}")
+        else:
+            try:
+                text_content = contents.decode("utf-8")
+            except UnicodeDecodeError:
+                text_content = contents.decode("latin-1")
+
+        if not text_content.strip():
+            raise HTTPException(status_code=400, detail="The uploaded document contains no readable text content.")
+
         paragraphs = [p.strip() for p in text_content.split("\n\n") if p.strip()]
 
         for paragraph in paragraphs:
             database.add_knowledge_content(bot_id=bot_id, file_name=file.filename, content=paragraph)
 
         return {"status": "success", "message": f"Successfully loaded {len(paragraphs)} facts from {file.filename}."}
+        
+    except HTTPException as http_ex:
+        raise http_ex
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"File parsing error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"File tracking server error: {str(e)}")
+
+@app.post("/bots/knowledge/url")
+async def import_knowledge_url(data: UrlImportRequest):
+    if data.bot_id in ["new", "playground"]:
+        raise HTTPException(status_code=400, detail="Please save your bot before tracking web assets.")
+        
+    try:
+        placeholder_text = f"Content extracted from website resource: {data.url}."
+        database.add_knowledge_content(bot_id=data.bot_id, file_name=data.url, content=placeholder_text)
+            
+        return {"status": "success", "bot_id": data.bot_id, "url": data.url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/bots/{bot_id}/knowledge")
 async def list_bot_knowledge_sources(bot_id: str):
-    """Fetches real database-stored sources to populate her Laravel front-end dynamically."""
     if bot_id in ["new", "playground"]:
         return []
-    return database.get_bot_knowledge_sources(bot_id)
+        
+    raw_sources = database.get_bot_knowledge_sources(bot_id)
+    processed_sources = []
+    for source in raw_sources:
+        processed_sources.append({
+            "id": source["source_name"],  
+            "source_name": source["source_name"],
+            "type": source["type"],
+            "sync_status": source["sync_status"],
+            "size": source["size"]
+        })
+    return processed_sources
+
+@app.delete("/bots/{bot_id}/knowledge/{file_name:path}")
+async def delete_bot_knowledge_source(bot_id: str, file_name: str):
+    if bot_id in ["new", "playground"]:
+        raise HTTPException(status_code=400, detail="Invalid bot target profile context.")
+
+    if database.delete_knowledge_file(bot_id, file_name):
+        return {"status": "success", "message": f"Successfully dropped source document: {file_name}"}
+        
+    raise HTTPException(status_code=500, detail="Failed to drop document data reference track.")
 
 
 # --- EXECUTION CHAT PIPELINE ---
 
 @app.post("/bots/{bot_id}/chat")
 async def execute_chatbot_inference(bot_id: str, payload: ChatPayload):
-    # Intercept sandbox/test configurations instantly
     if bot_id in ["new", "playground"]:
-        response_string = ai_service.generate_bot_reply(
-            bot_id="new", user_message=payload.message, history=payload.history, temperature=0.3
-        )
+        response_string = ai_service.generate_bot_reply(bot_id="new", user_message=payload.message, history=payload.history, temperature=0.3)
         return {"status": "success", "reply": response_string, "session_id": "playground"}
 
     bot_config = database.get_bot_config(bot_id)
@@ -166,11 +225,7 @@ async def execute_chatbot_inference(bot_id: str, payload: ChatPayload):
     database.save_chat_message(active_session_id, "assistant", response_string)
     database.increment_conversation_count(bot_id)
 
-    return {
-        "status": "success",
-        "reply": response_string,
-        "session_id": active_session_id
-    }
+    return {"status": "success", "reply": response_string, "session_id": active_session_id}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)

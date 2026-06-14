@@ -9,7 +9,6 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
-    # 1. Bots Profile Table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS bots (
             id TEXT PRIMARY KEY,
@@ -22,7 +21,6 @@ def init_db():
         )
     ''')
     
-    # 2. Bot Counter Metrics Table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS bot_statistics (
             bot_id TEXT PRIMARY KEY,
@@ -31,7 +29,6 @@ def init_db():
         )
     ''')
 
-    # 3. Chat Sessions Table (Sidebar Topics)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS chat_sessions (
             session_id TEXT PRIMARY KEY,
@@ -42,7 +39,6 @@ def init_db():
         )
     ''')
 
-    # 4. Chat Messages Table (Historical Context logs)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS chat_messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,7 +50,6 @@ def init_db():
         )
     ''')
     
-    # 5. Knowledge Base Document Table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS bot_knowledge (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,9 +62,6 @@ def init_db():
     
     conn.commit()
     conn.close()
-
-
-# --- BOT PROFILE MANAGEMENT ---
 
 def save_bot(bot_id: str, name: str, description: str, instructions: str, engine: str, temperature: float, guardrails: int) -> bool:
     try:
@@ -179,7 +171,6 @@ def query_bot_knowledge(bot_id: str, user_query: str) -> str:
     return "\n".join(matched_chunks) if matched_chunks else ""
 
 def get_bot_knowledge_sources(bot_id: str) -> List[Dict[str, Any]]:
-    """Groups text fragments by filename to return a clean asset list to Laravel UI."""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("""
@@ -194,15 +185,28 @@ def get_bot_knowledge_sources(bot_id: str) -> List[Dict[str, Any]]:
     return [
         {
             "source_name": r[0],
-            "type": "TXT",
+            "type": "URL" if (r[0].startswith("http://") or r[0].startswith("https://")) else "TXT",
             "sync_status": "Ready",
             "size": f"{r[1]} chunks"
         }
         for r in rows
     ]
 
+def delete_knowledge_file(bot_id: str, file_name: str) -> bool:
+    """Deletes all data context paragraphs chunks belonging to a single filename track."""
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM bot_knowledge WHERE bot_id = ? AND file_name = ?", (str(bot_id).strip(), file_name))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error dropping asset source track: {e}")
+        return False
 
-# --- CONVERSATION AND REPLAY HISTORY TRACKING ---
+
+# --- CONVERSATION AND HISTORY LOGGING ---
 
 def create_or_get_session(session_id: str, bot_id: str, first_message: str) -> str:
     clean_session_id = str(session_id).strip()
