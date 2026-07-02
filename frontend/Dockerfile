@@ -20,10 +20,13 @@ COPY . .
 # 4. Install Composer tool natively
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# 5. Added --no-scripts to bypass the crashing "boost" script hook
+# 5. Run dependency installation (skipping the broken boost script hook)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# 6. Set proper application permissions over storage and cache directories
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# 6. FIX: Create the missing SQLite database file automatically
+RUN touch database/database.sqlite
+
+# 7. Set proper application permissions so Apache can read and write to the database and logs
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
 EXPOSE 80
