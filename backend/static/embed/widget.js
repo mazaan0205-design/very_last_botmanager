@@ -1,4 +1,5 @@
 (function() {
+    console.log('running iife')
     // 1. Inject Floating Bubble Styles directly onto the host website
     const style = document.createElement('style');
     style.innerHTML = `
@@ -20,10 +21,13 @@
 
     // 2. Create Widget Markup Structures
     const config = window.BotManagerConfig || { botId: 'new', backendUrl: 'http://127.0.0.1:8001' };
+
     let session_id = null;
 
     const container = document.createElement('div');
     container.id = 'botmanager-widget-container';
+    
+    // CORRECTION: Added type="button" to prevent implicit form submissions
     container.innerHTML = `
         <div id="botmanager-chat-window">
             <div id="botmanager-chat-header">AI Assistant Support</div>
@@ -32,7 +36,7 @@
             </div>
             <div id="botmanager-chat-input-area">
                 <input type="text" id="botmanager-chat-input" placeholder="Type your message...">
-                <button id="botmanager-chat-submit">Send</button>
+                <button type="button" id="botmanager-chat-submit">Send</button>
             </div>
         </div>
         <div id="botmanager-chat-bubble">
@@ -54,7 +58,12 @@
     });
 
     // 4. Message Streaming Handler
-    async function sendMessage() {
+    // CORRECTION: Added 'e' parameters to accept and prevent default behavior
+    async function sendMessage(e) {
+        if (e && typeof e.preventDefault === 'function') {
+            e.preventDefault();
+        }
+
         const text = inputEl.value.trim();
         if (!text) return;
 
@@ -66,7 +75,7 @@
         const typingIndicator = appendMessage('bot', 'Thinking...');
 
         try {
-            const response = await fetch(`${config.backendUrl}/bots/${config.botId}/chat`, {
+            const response = await fetch(`${config.apiUrl}/bots/${config.botId}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: text, session_id: session_id, history: [] })
@@ -74,16 +83,18 @@
             const data = await response.json();
             
             // Remove indicator and append real response
-            typingIndicator.remove();
+            if (typingIndicator) typingIndicator.remove();
+            
             if (data.reply) {
                 appendMessage('bot', data.reply);
                 session_id = data.session_id; // Remember sidebar tracking thread context
             } else {
                 appendMessage('bot', 'Sorry, I ran into an issue.');
             }
-        } catch (e) {
-            typingIndicator.remove();
+        } catch (err) {
+            if (typingIndicator) typingIndicator.remove();
             appendMessage('bot', 'Unable to connect to service.');
+            console.error('Widget Chat Error:', err);
         }
     }
 
@@ -96,6 +107,13 @@
         return msg;
     }
 
+    // CORRECTION: Pass the browser pointer event straight into the handler
     submitBtn.addEventListener('click', sendMessage);
-    inputEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    
+    // CORRECTION: Explicitly forward the keyboard event to sendMessage
+    inputEl.addEventListener('keypress', (e) => { 
+        if (e.key === 'Enter') {
+            sendMessage(e); 
+        } 
+    });
 })();

@@ -155,7 +155,7 @@
     </style>
 </head>
 
-<body class="font-body-md text-on-surface antialiased">
+{{-- <body class="font-body-md text-on-surface antialiased">
     <div id="sidebar-backdrop" class="fixed inset-0 bg-slate-900/50 z-40 hidden lg:hidden transition-opacity"></div>
 
     <aside id="sidebar"
@@ -195,7 +195,7 @@
                 <span class="material-symbols-outlined">chat_bubble</span> Test Preview
             </a>
         </nav>
-    </aside>
+    </aside> --}}
 
     <header
         class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 flex justify-between items-center px-4 sm:px-6 z-30 lg:ml-[280px] transition-all duration-300">
@@ -231,7 +231,7 @@
     <form id="bot-settings-form" action="{{ route('bots.update', $bot->id) }}" method="POST">
         @csrf
     </form>
-    <main class="lg:ml-[280px] mt-16 p-4 md:p-[40px] transition-all duration-300">
+    <main class="w-full pt-16 min-h-screen">
         <div class="max-w-5xl mx-auto">
             <div class="mb-xl text-center sm:text-left">
                 <h2 class="font-h2 text-h2 text-on-surface">Bot Configuration</h2>

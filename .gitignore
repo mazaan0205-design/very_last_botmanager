@@ -1,0 +1,6 @@
+# Ignore Python cache directories and files
+backend/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+frontend/composer.lock

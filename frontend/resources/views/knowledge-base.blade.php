@@ -148,7 +148,7 @@
     </script>
 </head>
 
-<body class="bg-background text-on-background min-h-screen flex">
+{{-- <body class="bg-background text-on-background min-h-screen flex">
     <!-- Mobile Sidebar Backdrop -->
     <div id="sidebar-backdrop" class="fixed inset-0 bg-slate-900/50 z-40 hidden lg:hidden transition-opacity"></div>
     <!-- SideNavBar -->
@@ -200,221 +200,286 @@
             </a>
         </div>
         </div>
-    </aside>
-    <div class="flex-1 lg:ml-[280px] w-full transition-all duration-300">
-        <!-- TopNavBar -->
-        <header
-            class="sticky top-0 z-30 w-full h-16 px-4 sm:px-6 bg-white border-b border-slate-200 flex justify-between items-center shadow-sm font-['Inter'] antialiased">
-            <div class="flex items-center gap-2 sm:gap-4">
-                <button id="mobile-menu-btn"
-                    class="p-2 -ml-2 mr-1 text-slate-500 hover:bg-slate-50 rounded-lg lg:hidden transition-colors">
-                    <span class="material-symbols-outlined">menu</span>
-                </button>
-                <div class="relative w-full max-w-[130px] sm:max-w-xs">
-                    <span
-                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]"
-                        data-icon="search">search</span>
-                    <input
-                        class="pl-10 pr-4 py-1.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        placeholder="Search..." type="text" />
-                </div>
+    </aside> --}}
+<div class="flex-1 lg:ml-[280px] w-full transition-all duration-300">
+    <!-- TopNavBar -->
+    <header
+        class="sticky top-0 z-30 w-full h-16 px-4 sm:px-6 bg-white border-b border-slate-200 flex justify-between items-center shadow-sm font-['Inter'] antialiased">
+        <div class="flex items-center gap-2 sm:gap-4">
+            <button id="mobile-menu-btn"
+                class="p-2 -ml-2 mr-1 text-slate-500 hover:bg-slate-50 rounded-lg lg:hidden transition-colors">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <div class="relative w-full max-w-[130px] sm:max-w-xs">
+                <span
+                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]"
+                    data-icon="search">search</span>
+                <input
+                    class="pl-10 pr-4 py-1.5 w-full bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    placeholder="Search..." type="text" />
             </div>
-            <div class="flex items-center gap-4">
-                <button class="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors cursor-pointer"
-                    title="Notifications">
-                    <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-                </button>
-                <button class="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors cursor-pointer"
-                    title="Settings">
-                    <span class="material-symbols-outlined" data-icon="settings">settings</span>
-                </button>
-                <button class="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors cursor-pointer"
-                    title="Help">
-                    <span class="material-symbols-outlined" data-icon="help">help</span>
-                </button>
-                <div class="h-8 w-px bg-slate-200 mx-2"></div>
-                <img alt="User profile avatar" class="w-8 h-8 rounded-full border border-slate-200"
-                    data-alt="professional male headshot with a friendly expression in a clean studio setting with neutral lighting"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAagt61MURBXW2AaE2ObzkKIp4WaC8PbzV_RdYPVjjxY5Ya2mPVuEMfIh070AokY_I4IFgSUCojBHQyglfKKm4u_qlAm8B0lEYmxqIODEzxcC4HMEsAGNWvLhoWcN-ucFw-rvMExGSrlIy9od2LFzJ8RuEkhflpJtYuc5BpDHSufGsoJY-CnZYPV6ceajSdZLNCb1wSpYcHcVegN3oXzcBMdgx1BvgJwGtPj2giTJqOPFVAvsKs8E2ROH8CyXP0ercgQ039PjU1O-w" />
+        </div>
+
+        <div class="flex items-center gap-4">
+            <button class="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors cursor-pointer"
+                title="Notifications">
+                <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+            </button>
+            <button class="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors cursor-pointer"
+                title="Settings">
+                <span class="material-symbols-outlined" data-icon="settings">settings</span>
+            </button>
+            <button class="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors cursor-pointer"
+                title="Help">
+                <span class="material-symbols-outlined" data-icon="help">help</span>
+            </button>
+            <div class="h-8 w-px bg-slate-200 mx-2"></div>
+            <img alt="User profile avatar" class="w-8 h-8 rounded-full border border-slate-200"
+                data-alt="professional male headshot with a friendly expression in a clean studio setting with neutral lighting"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAagt61MURBXW2AaE2ObzkKIp4WaC8PbzV_RdYPVjjxY5Ya2mPVuEMfIh070AokY_I4IFgSUCojBHQyglfKKm4u_qlAm8B0lEYmxqIODEzxcC4HMEsAGNWvLhoWcN-ucFw-rvMExGSrlIy9od2LFzJ8RuEkhflpJtYuc5BpDHSufGsoJY-CnZYPV6ceajSdZLNCb1wSpYcHcVegN3oXzcBMdgx1BvgJwGtPj2giTJqOPFVAvsKs8E2ROH8CyXP0ercgQ039PjU1O-w" />
+        </div>
+    </header>
+    <main class="w-full pt-16 min-h-screen overflow-x-hidden -ml-0 pl-0 md:-ml-64 md:pl-0 lg:-ml-64 lg:pl-0">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 w-full">
+
+        <div class="mb-8">
+            <div class="flex items-center gap-2 text-slate-500 mb-2">
+                <a class="text-xs uppercase tracking-wider hover:text-indigo-600" href="/dashboard">Bots</a>
+                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                <span class="text-xs uppercase tracking-wider text-slate-400">{{ $bot->name ?? 'Nexus-7 Sales Agent' }}</span>
             </div>
-        </header>
-        <main class="p-4 md:p-[40px] max-w-7xl mx-auto w-full">
-            <div class="mb-8">
-                <div class="flex items-center gap-2 text-slate-500 mb-2">
-                    <a class="text-xs uppercase tracking-wider hover:text-indigo-600" href="#">Bots</a>
-                    <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-                    <span class="text-xs uppercase tracking-wider">Nexus-7 Sales Agent</span>
+
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Knowledge Base</h2>
+                    <p class="text-slate-500 mt-1">Manage the data sources that power your chatbot's intelligence.</p>
                 </div>
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-900">Knowledge Base</h2>
-                        <p class="text-slate-500 mt-1">Manage the data sources that power your chatbot's intelligence.
-                        </p>
-                    </div>
-                    <button
-                        class="px-4 h-10 border border-slate-200 text-slate-600 rounded-lg flex items-center gap-2 hover:bg-slate-50 transition-colors">
-                        <span class="material-symbols-outlined text-[20px]">sync</span> Sync All
+
+                <div class="flex items-center gap-3 w-full sm:w-auto shrink-0">
+                    <button class="px-4 h-10 border border-slate-200 text-slate-600 rounded-lg flex items-center gap-2 hover:bg-slate-50 transition-colors text-sm font-medium">
+                        <span class="material-symbols-outlined text-[20px]">sync</span>
+                        <span>Sync All</span>
                     </button>
+
+                    <a href="/dashboard"
+                       class="px-4 h-10 border border-slate-200 bg-white text-slate-600 rounded-lg flex items-center gap-2 hover:bg-slate-50 hover:text-slate-900 transition-all text-sm font-medium shadow-sm hover:shadow">
+                        <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                        <span>Back to Dashboard</span>
+                    </a>
                 </div>
             </div>
+        </div>
 
-            <div class="grid grid-cols-12 gap-6 mb-8">
-                <div class="col-span-12 lg:col-span-7 space-y-6">
-                    <div class="bg-white border border-slate-200 rounded-xl p-6">
-                        <div class="flex items-center gap-2 mb-4">
-                            <span class="material-symbols-outlined text-indigo-600">upload_file</span>
-                            <h3 class="text-lg font-bold text-slate-800">Upload Files</h3>
-                        </div>
-                        <div class="border-2 border-dashed border-slate-200 rounded-xl py-10 text-center bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-300 transition-all cursor-pointer"
-                            onclick="document.getElementById('file-input').click()">
-                            <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">cloud_upload</span>
-                            <p class="font-medium text-slate-600">Drag & drop files here</p>
-                            <p class="text-sm text-slate-400 mt-1">Supported: PDF, DOCX, TXT</p>
-                            <input type="file" id="file-input" class="hidden" onchange="handleFileUpload(event)">
-                            <button type="button"
-                                class="mt-4 px-6 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:border-indigo-500 transition-colors">Browse
-                                Files</button>
-                        </div>
+        <div class="grid grid-cols-12 gap-6 mb-8">
+            <div class="col-span-12 lg:col-span-7 space-y-6">
+                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="material-symbols-outlined text-indigo-600">upload_file</span>
+                        <h3 class="text-lg font-bold text-slate-800">Upload Files</h3>
                     </div>
-
-                    <div class="bg-white border border-slate-200 rounded-xl p-6">
-                        <div class="flex items-center gap-2 mb-4">
-                            <span class="material-symbols-outlined text-indigo-600">link</span>
-                            <h3 class="text-lg font-bold text-slate-800">Import URL</h3>
-                        </div>
-                        <div class="flex gap-2">
-                            <input
-                                class="flex-1 px-4 h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                                placeholder="https://example.com/docs" type="url" />
-                            <button
-                                class="px-6 h-11 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-all">Add
-                                URL</button>
-                        </div>
+                    <div class="border-2 border-dashed border-slate-200 rounded-xl py-10 text-center bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-300 transition-all cursor-pointer"
+                        onclick="document.getElementById('file-input').click()">
+                        <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">cloud_upload</span>
+                        <p class="font-medium text-slate-600">Drag & drop files here</p>
+                        <p class="text-sm text-slate-400 mt-1">Supported: PDF, DOCX, TXT</p>
+                        <input type="file" id="file-input" class="hidden" onchange="handleFileUpload(event)">
+                        <button type="button" class="mt-4 px-6 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:border-indigo-500 transition-colors">Browse Files</button>
                     </div>
                 </div>
 
-                <div class="col-span-12 lg:col-span-5 space-y-6">
-                    <div class="bg-white border border-slate-200 rounded-xl p-6">
-                        <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Storage Usage</h3>
-                        <div class="space-y-2">
-                            <div class="flex justify-between items-end">
-                                <span class="text-2xl font-bold">1.2 GB</span>
-                                <span class="text-sm text-slate-500">of 5 GB limit</span>
-                            </div>
-                            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-indigo-600 w-[24%] rounded-full"></div>
-                            </div>
-                        </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="material-symbols-outlined text-indigo-600">link</span>
+                        <h3 class="text-lg font-bold text-slate-800">Import URL</h3>
                     </div>
-                    <div class="bg-indigo-600 rounded-xl p-6 text-white">
-                        <h3 class="font-bold mb-2">Optimization Tip</h3>
-                        <p class="text-sm opacity-90">Break down large PDF manuals into chapters for better retrieval
-                            accuracy.</p>
+                    <div class="flex gap-2">
+                        <input class="flex-1 px-4 h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="https://example.com/docs" type="url" />
+                        <button class="px-6 h-11 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-all">Add URL</button>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-slate-900">Current Sources</h3>
-                    <span class="px-3 py-1 bg-slate-100 rounded-full text-xs text-slate-600">Total: 48 sources</span>
+            <div class="col-span-12 lg:col-span-5 space-y-6">
+                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Storage Usage</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-end">
+                            <span class="text-2xl font-bold">1.2 GB</span>
+                            <span class="text-sm text-slate-500">of 5 GB limit</span>
+                        </div>
+                        <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-indigo-600 w-[24%] rounded-full"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <tbody id="sources-table-body" class="divide-y divide-slate-100">
+
+                <div class="bg-indigo-600 rounded-xl p-6 text-white shadow-sm">
+                    <h3 class="font-bold mb-2">Optimization Tip</h3>
+                    <p class="text-sm opacity-90">Break down large PDF manuals into chapters for better retrieval accuracy.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-12">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-900">Current Sources</h3>
+                <span class="px-3 py-1 bg-slate-100 rounded-full text-xs text-slate-600">Total Active Vector Records</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <tbody id="sources-table-body" class="divide-y divide-slate-100">
                         </tbody>
-                    </table>
-                </div>
+                </table>
             </div>
-        </main>
+        </div>
 
-       <script>
-    // Load sources on page ready
-    document.addEventListener('DOMContentLoaded', loadSources);
+    </div>
+</main>
 
-    // Upload logic
-    async function handleFileUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+    <script>
+        // Global Configurations
+        const BASE_URL = "http://127.0.0.1:8001";
+        const BOT_ID = "{{ isset($bot) ? $bot->id : '' }}";
 
-        const botId = "{{ isset($bot) ? $bot->id : '' }}";
-        const formData = new FormData();
-        formData.append('file', file);
+        // Load active knowledge sources when the page content is ready
+        document.addEventListener('DOMContentLoaded', loadSources);
 
-        try {
-            const response = await fetch(`http://127.0.0.1:8001/bots/${botId}/knowledge/upload`, {
-                method: 'POST',
-                body: formData,
-            });
+        /**
+         * 1. Fetch and Render Knowledge Sources Table
+         */
+        async function loadSources() {
+            const tableBody = document.getElementById('sources-table-body');
+            if (!BOT_ID) return;
 
-            if (response.ok) {
-                alert('File uploaded successfully!');
-                await loadSources();
-            } else {
-                alert('Upload failed. Check backend logs for 500 error.');
-            }
-        } catch (error) {
-            console.error('Upload Error:', error);
-            alert('Upload server connection error.');
-        }
-    }
+            try {
+                const response = await fetch(`${BASE_URL}/bots/${BOT_ID}/knowledge`);
+                if (!response.ok) throw new Error("Fetch breakdown");
 
-    // Refresh the table with correct UI styling
-    async function loadSources() {
-        const tableBody = document.getElementById('sources-table-body');
-        const botId = "{{ isset($bot) ? $bot->id : '' }}";
+                const sources = await response.json();
+                tableBody.innerHTML = ''; // Clear out loading states
 
-        try {
-            const response = await fetch(`http://127.0.0.1:8001/bots/${botId}/knowledge`);
-            if (!response.ok) throw new Error("Fetch failed");
+                // Fallback empty view state if no documents are found
+                if (!sources || sources.length === 0) {
+                    tableBody.innerHTML = `
+                    <tr>
+                        <td class="px-6 py-8 text-center text-sm text-slate-400">
+                            No knowledge sources connected yet. Upload a file above to begin!
+                        </td>
+                    </tr>`;
+                    return;
+                }
 
-            const sources = await response.json();
-            tableBody.innerHTML = '';
+                // Loop and render data matching your backend fields
+                sources.forEach(source => {
+                    // FIXED: Mapping directly to 'source_name' from your Python engine backend
+                    const fileName = source.source_name || 'Unknown File';
 
-            sources.forEach(source => {
-                // Ensure source.name is defined
-                const fileName = source.name || 'Unknown File';
-                const row = `
-                <tr class="hover:bg-slate-50 border-b">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-slate-400">description</span>
-                            <span class="font-medium text-slate-900">${fileName}</span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <button onclick="deleteSource('${botId}', '${fileName}')"
-                                class="text-slate-400 hover:text-red-600 transition-colors">
-                            <span class="material-symbols-outlined">delete</span>
-                        </button>
+                    // Escape single quotes safely to ensure string injection inside the onclick parameter doesn't break
+                    const escapedFileName = fileName.replace(/'/g, "\\'");
+
+                    const row = `
+                    <tr class="hover:bg-slate-50/70 border-b transition-colors duration-150">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-slate-400">description</span>
+                                <span class="font-medium text-slate-900 text-sm">${fileName}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="deleteSource(this, '${escapedFileName}')"
+                                    class="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 transition-all"
+                                    title="Delete Source">
+                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                            </button>
+                        </td>
+                    </tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            } catch (error) {
+                console.error("Error loading sources:", error);
+                tableBody.innerHTML = `
+                <tr>
+                    <td class="px-6 py-8 text-center text-sm text-rose-500">
+                        Failed to load active knowledge documents.
                     </td>
                 </tr>`;
-                tableBody.innerHTML += row;
-            });
-        } catch (error) {
-            console.error("Error loading sources:", error);
-        }
-    }
-
-    // Delete logic matching API documentation
-    async function deleteSource(botId, fileName) {
-        if (!confirm("Are you sure you want to delete " + fileName + "?")) return;
-
-        try {
-            const response = await fetch(`http://127.0.0.1:8001/bots/${botId}/knowledge/${encodeURIComponent(fileName)}`, {
-                method: 'DELETE'
-            });
-
-            if (response.ok) {
-                alert("Deleted successfully!");
-                await loadSources();
-            } else {
-                alert("Failed to delete. Check server logs.");
             }
-        } catch (error) {
-            console.error("Delete Error:", error);
         }
-    }
-</script>
-</body>
+
+        /**
+         * 2. Handle File Upload Dropzone / Action
+         */
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file || !BOT_ID) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${BASE_URL}/bots/${BOT_ID}/knowledge/upload`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    alert('File uploaded successfully!');
+                    event.target.value = ''; // Reset input target value
+                    await loadSources(); // Force clean reload of table records
+                } else {
+                    alert('Upload failed. Check backend logs for 500 error.');
+                }
+            } catch (error) {
+                console.error('Upload Error:', error);
+                alert('Upload server connection error.');
+            }
+        }
+
+        /**
+         * 3. Delete Knowledge Source and Remove Row Instantly
+         */
+        async function deleteSource(buttonElement, fileName) {
+            if (!confirm(`Are you sure you want to delete "${fileName}"?`)) return;
+
+            try {
+                const response = await fetch(`${BASE_URL}/bots/${BOT_ID}/knowledge/${encodeURIComponent(fileName)}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert("Deleted successfully!");
+
+                    // Grab the closest <tr> parent of the clicked button to isolate the exact element
+                    const rowElement = buttonElement.closest('tr');
+                    if (rowElement) {
+                        rowElement.style.opacity = '0';
+                        rowElement.style.transform = 'scale(0.96)';
+                        rowElement.style.transition = 'all 0.2s ease';
+
+                        setTimeout(() => {
+                            rowElement.remove();
+
+                            // Check if the table body is now completely empty
+                            const tableBody = document.getElementById('sources-table-body');
+                            if (tableBody.children.length === 0) {
+                                tableBody.innerHTML = `
+                                <tr>
+                                    <td class="px-6 py-8 text-center text-sm text-slate-400">
+                                        No knowledge sources connected yet. Upload a file above to begin!
+                                    </td>
+                                </tr>`;
+                            }
+                        }, 200);
+                    }
+                } else {
+                    alert("Failed to delete. Check server logs.");
+                }
+            } catch (error) {
+                console.error("Delete Error:", error);
+                alert("An error occurred while communicating with the server.");
+            }
+        }
+    </script>
+    </body>
+
 </html>

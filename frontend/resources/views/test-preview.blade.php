@@ -165,7 +165,7 @@
     </style>
 </head>
 
-<body class="bg-background text-on-background font-body-md min-h-screen flex overflow-hidden">
+{{-- <body class="bg-background text-on-background font-body-md min-h-screen flex overflow-hidden">
     <!-- Mobile Sidebar Backdrop -->
     <div id="sidebar-backdrop" class="fixed inset-0 bg-slate-900/50 z-40 hidden lg:hidden transition-opacity"></div>
     <!-- SideNavBar -->
@@ -252,8 +252,10 @@
                 <img alt="User profile avatar" class="w-8 h-8 rounded-full border border-slate-200"
                     data-alt="Professional user profile portrait with a neutral background and professional attire"
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkO4Z3hjSrSSEsplWw1qcqTfxaaUWg0JNrufKY-1FbO_zth6OI5YX0ioziSYXI987QovCg9OxCU3ezoO3U_WmpTYXmU8A65VWlnhV7t8kD9x7f9TbHTv7lQUySsM3WMeCWuSuGc0WT24CGorzm0vY8raV82ytdnDEiy7Y6zLZLUSWxZAeivvU2UHwkoRnljRxZE0612MWDneCcrD1SWYXnLxwaQxNZuRgIb2LX8Q0kDF4jp1QgXmERpRgiF5qaVqr8kC96GFRbuBI" />
-            </div>
-        </header>
+            </div> --}}
+        {{-- </header> --}}
+
+
         <!-- Test Interface Container -->
         <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
             <!-- Quick Config Panel (Left 1/3) -->
