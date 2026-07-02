@@ -20,8 +20,8 @@ COPY . .
 # 4. Install Composer tool natively
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# 5. Run optimized dependency installation to fix hidden 500 runtime errors
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# 5. Added --no-scripts to bypass the crashing "boost" script hook
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # 6. Set proper application permissions over storage and cache directories
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
