@@ -15,23 +15,21 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 WORKDIR /var/www/html
+COPY . .
 
-# 4. Copy your frontend Laravel contents into the container
-COPY frontend/ .
-
-# 5. Install Composer tool natively
+# 4. Install Composer tool natively
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# 6. Run dependency installation
+# 5. Run dependency installation (skipping scripts)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# 7. Create the empty SQLite database file
+# 6. Create the empty SQLite database file
 RUN touch database/database.sqlite
 
-# 8. Set proper application permissions
+# 7. Set proper application permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
 EXPOSE 80
 
-# 9. Run migrations automatically on startup, then start Apache
+# 8. FIX: Run migrations automatically on startup, then start Apache
 CMD php artisan migrate --force && apache2-foreground
