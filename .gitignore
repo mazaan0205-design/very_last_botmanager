@@ -1,6 +1,19 @@
-# Ignore Python cache directories and files
-backend/__pycache__/
+# Dependency folders
+/vendor/
+/node_modules/
+
+# Environment files
+.env
+
+# Storage and logs
+/frontend/storage/
+/frontend/bootstrap/cache/
+
+# Python cache
+**/__pycache__/
 *.pyc
 *.pyo
 *.pyd
-frontend/composer.lock
+
+# Database
+/frontend/database/*.sqlite
