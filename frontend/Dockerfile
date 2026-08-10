@@ -1,0 +1,48 @@
+FROM php:8.2-apache
+
+# 1. Install required system tools and PHP extensions for Laravel
+RUN apt-get update && apt-get install -y \
+    libpng-dev libjpeg-dev libfreetype6-dev zip unzip git libbrotli-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql gd
+
+# 2. Turn on Apache rewrite mode for Laravel routing paths
+RUN a2enmod rewrite
+
+# 3. Point Apache's web folder strictly to Laravel's public directory
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+WORKDIR /var/www/html
+COPY . .
+
+# 4. FIX: Automatically intercept local URLs and rewrite them to your live Render backend
+RUN find . -type f -not -path '*/.*' -exec sed -i 's|127.0.0.1:8001|very-last-botmanager.onrender.com|g' {} + \
+    && find . -type f -not -path '*/.*' -exec sed -i 's|localhost:8001|very-last-botmanager.onrender.com|g' {} + \
+    && find . -type f -not -path '*/.*' -exec sed -i 's|http://very-last-botmanager.onrender.com|https://very-last-botmanager.onrender.com|g' {} +
+
+# 5. Install Composer tool natively
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# 6. Run dependency installation (skipping custom post-install scripts)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+# 7. Create the empty SQLite database file
+RUN mkdir -p database && touch database/database.sqlite
+
+# 8. Explicitly create missing Laravel system storage and bootstrap folders
+RUN mkdir -p storage/framework/cache/data \
+             storage/framework/sessions \
+             storage/framework/views \
+             storage/logs \
+             bootstrap/cache
+
+# 9. Set proper application permissions securely
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
+
+EXPOSE 80
+
+# 10. Clear configuration cache on boot, run migrations, then start Apache
+CMD php artisan config:clear && php artisan cache:clear && php artisan migrate --force && apache2-foregroundpache
+CMD php artisan migrate --force && apache2-foreground

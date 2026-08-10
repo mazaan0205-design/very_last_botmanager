@@ -1,0 +1,95 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: botmanager
+      POSTGRES_USER: botmanager
+      POSTGRES_PASSWORD: botmanager
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+    environment:
+      DATABASE_URL: postgresql://botmanager:botmanager@postgres:5432/botmanager
+      REDIS_URL: redis://redis:6379/0
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI:-http://127.0.0.1:8001/integrations/google/callback}
+      SLACK_CLIENT_ID: ${SLACK_CLIENT_ID:-}
+      SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET:-}
+      SLACK_OAUTH_REDIRECT_URI: ${SLACK_OAUTH_REDIRECT_URI:-http://127.0.0.1:8001/integrations/slack/callback}
+      RUNTIME_SERVICE_TOKEN: ${RUNTIME_SERVICE_TOKEN:-dev-runtime-token}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - postgres
+      - redis
+
+  laravel:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    environment:
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: botmanager
+      DB_USERNAME: botmanager
+      DB_PASSWORD: botmanager
+      PYTHON_API_URL: http://api:8001
+      RUNTIME_SERVICE_TOKEN: ${RUNTIME_SERVICE_TOKEN:-dev-runtime-token}
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./frontend:/var/www/html
+    depends_on:
+      - postgres
+      - redis
+      - api
+
+  worker:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: php artisan queue:work redis --sleep=3 --tries=3
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: botmanager
+      DB_USERNAME: botmanager
+      DB_PASSWORD: botmanager
+      PYTHON_API_URL: http://api:8001
+      RUNTIME_SERVICE_TOKEN: ${RUNTIME_SERVICE_TOKEN:-dev-runtime-token}
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    volumes:
+      - ./frontend:/var/www/html
+    depends_on:
+      - postgres
+      - redis
+      - api
+
+volumes:
+  pgdata:
