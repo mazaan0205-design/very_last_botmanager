@@ -274,3 +274,62 @@ def api_search_drive_files(target_id: str = Query(..., description="User ID or O
     if not token:
         raise HTTPException(status_code=400, detail="Invalid or missing OAuth token.")
     return {"result": search_drive_files(token, query, max_results)}
+
+
+# --- INTEGRATION STATUS / CONNECT / DISCONNECT ---
+# These power the /integrations page in the frontend. Previously the frontend
+# called endpoints (`/integrations/status`, `/integrations/{provider}/connect`)
+# that had no backend implementation at all, so the page always showed every
+# provider as disconnected and "Connect account" silently failed.
+
+GOOGLE_REDIRECT_URI = os.environ.get(
+    "GOOGLE_REDIRECT_URI",
+    os.environ.get("GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:8000/auth/google/callback"),
+)
+
+
+@router.get("/status")
+def api_integration_status(owner_id: str = Query("default_owner")):
+    """Reports which providers this owner has connected. Only Google is
+    wired up on the backend today; Slack/Notion are returned as
+    not-configured so the UI can show them as 'Coming soon' instead of
+    silently erroring."""
+    token = get_valid_token(owner_id)
+    return {
+        "integrations": [
+            {"id": "google", "connected": bool(token), "configured": True},
+            {"id": "slack", "connected": False, "configured": False},
+            {"id": "notion", "connected": False, "configured": False},
+        ]
+    }
+
+
+@router.get("/{provider}/connect")
+def api_integration_connect(provider: str, owner_id: str = Query("default_owner")):
+    """Returns a JSON authorization_url for the given provider, matching
+    what the integrations page expects (it does window.location.assign on
+    the returned URL rather than following a redirect)."""
+    if provider != "google":
+        raise HTTPException(status_code=400, detail=f"'{provider}' is not connected yet — coming soon.")
+
+    google_client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
+    scope = (
+        "https://www.googleapis.com/auth/gmail.readonly "
+        "https://www.googleapis.com/auth/gmail.send "
+        "https://www.googleapis.com/auth/calendar "
+        "https://www.googleapis.com/auth/drive.readonly"
+    )
+    authorization_url = (
+        f"https://accounts.google.com/o/oauth2/v2/auth?response_type=code"
+        f"&client_id={google_client_id}&redirect_uri={GOOGLE_REDIRECT_URI}"
+        f"&scope={scope}&access_type=offline&prompt=consent&state={owner_id}"
+    )
+    return {"authorization_url": authorization_url}
+
+
+@router.delete("/{provider}")
+def api_integration_disconnect(provider: str, owner_id: str = Query("default_owner")):
+    if provider != "google":
+        raise HTTPException(status_code=400, detail=f"'{provider}' was never connected.")
+    removed = database.clear_user_oauth_token(owner_id)
+    return {"message": "Disconnected" if removed else "Nothing to disconnect", "provider": provider}
