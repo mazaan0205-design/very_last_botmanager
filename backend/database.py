@@ -565,3 +565,17 @@ def update_user_oauth_token(target_id: str, access_token: str, expires_at: float
         db.commit()
     finally:
         db.close()
+
+
+def clear_user_oauth_token(target_id: str) -> bool:
+    """Removes a stored Google OAuth token, effectively disconnecting the account."""
+    db = SessionLocal()
+    try:
+        token_record = db.query(UserOAuthTokenModel).filter(UserOAuthTokenModel.target_id == target_id).first()
+        if not token_record:
+            return False
+        db.delete(token_record)
+        db.commit()
+        return True
+    finally:
+        db.close()
