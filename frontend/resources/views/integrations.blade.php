@@ -47,6 +47,12 @@
             notice.classList.remove('hidden');
         }
 
+        // If we just came back from a successful Google OAuth redirect, show a banner
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('connected') === 'google') {
+            showNotice('Google Workspace connected successfully.', 'success');
+        }
+
         async function loadIntegrations() {
             // Master list ensuring Google, Slack, and Notion always show up together
             let items = [
@@ -57,7 +63,7 @@
 
             try {
                 // Pass ownerId to fetch connection status specific to the logged-in user
-                const response = await fetch(`${backendUrl}/integrations/status?owner_id=${encodeURIComponent(ownerId)}`);
+                const response = await fetch(`${backendUrl}/api/integrations/status?owner_id=${encodeURIComponent(ownerId)}`);
                 const result = await response.json();
 
                 let backendItems = [];
@@ -88,10 +94,11 @@
             container.innerHTML = items.map(item => {
                 const iconKey = (item.id || 'extension').toLowerCase();
                 const iconName = icons[iconKey] || 'extension';
-                const badgeText = item.connected ? 'Connected' : (item.configured ? 'Ready to connect' : 'Setup required');
+                const badgeText = item.connected ? 'Connected' : (item.configured ? 'Ready to connect' : 'Coming soon');
                 const badgeClass = item.connected ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500';
-                const btnText = item.connected ? 'Account connected' : 'Connect account';
-                const btnClass = item.connected ? 'cursor-not-allowed bg-slate-100 text-slate-400' : 'bg-indigo-600 text-white hover:bg-indigo-700';
+                const disabled = item.connected || !item.configured;
+                const btnText = item.connected ? 'Account connected' : (item.configured ? 'Connect account' : 'Coming soon');
+                const btnClass = disabled ? 'cursor-not-allowed bg-slate-100 text-slate-400' : 'bg-indigo-600 text-white hover:bg-indigo-700';
 
                 let capabilitiesText = '';
                 if (Array.isArray(item.capabilities)) {
@@ -108,7 +115,7 @@
                         </div>
                         <h2 class="mt-5 text-lg font-bold">${escapeHtml(item.name)}</h2>
                         <p class="mt-2 text-sm text-slate-600">${capabilitiesText}</p>
-                        <button onclick="connectProvider('${escapeHtml(item.id)}')" ${item.connected ? 'disabled' : ''} class="mt-5 w-full rounded-lg py-2.5 text-sm font-semibold ${btnClass}">
+                        <button onclick="connectProvider('${escapeHtml(item.id)}')" ${disabled ? 'disabled' : ''} class="mt-5 w-full rounded-lg py-2.5 text-sm font-semibold ${btnClass}">
                             ${btnText}
                         </button>
                     </article>`;
@@ -118,7 +125,7 @@
         async function connectProvider(provider) {
             try {
                 // Include the authenticated ownerId in the connect request query string
-                const response = await fetch(`${backendUrl}/integrations/${provider}/connect?owner_id=${encodeURIComponent(ownerId)}`);
+                const response = await fetch(`${backendUrl}/api/integrations/${provider}/connect?owner_id=${encodeURIComponent(ownerId)}`);
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.detail || 'Connection could not be started.');
                 window.location.assign(data.authorization_url);
