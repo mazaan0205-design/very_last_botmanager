@@ -147,11 +147,15 @@ def register_user(req: UserRegisterRequest):
     """Register a New Platform User Account"""
     try:
         user_id = database.create_user(email=req.email, password=req.password, full_name=req.full_name)
-        if not user_id:
-            raise HTTPException(status_code=400, detail="Email already registered or invalid input.")
-        return {"message": "User registered successfully", "user_id": user_id, "email": req.email}
     except Exception as e:
+        # Only genuine unexpected failures (DB connection issues, etc.) land here now
         raise HTTPException(status_code=500, detail=str(e))
+
+    if not user_id:
+        # Raised outside the try block so it isn't caught by the except above
+        raise HTTPException(status_code=400, detail="Email already registered or invalid input.")
+
+    return {"message": "User registered successfully", "user_id": user_id, "email": req.email}
 
 
 @app.post("/api/auth/login", response_model=TokenResponse, tags=["Authentication"])
@@ -399,22 +403,24 @@ def google_auth_callback(code: str, state: str = "default_owner"):
 
     try:
         res = requests.post(token_url, data=payload, timeout=10)
-        if res.status_code != 200:
-            raise HTTPException(status_code=400, detail=f"Failed to obtain token from Google: {res.text}")
-
-        token_data = res.json()
-        access_token = token_data.get("access_token")
-        refresh_token = token_data.get("refresh_token")
-        expires_in = token_data.get("expires_in", 3600)
-        expires_at = time.time() + expires_in
-
-        database.update_user_oauth_token(
-            target_id=state,
-            access_token=access_token,
-            refresh_token=refresh_token,
-            expires_at=expires_at
-        )
-
-        return {"message": "Google Workspace successfully connected and authenticated!", "owner_id": state}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Network error contacting Google: {e}")
+
+    if res.status_code != 200:
+        raise HTTPException(status_code=400, detail=f"Failed to obtain token from Google: {res.text}")
+
+    token_data = res.json()
+    access_token = token_data.get("access_token")
+    refresh_token = token_data.get("refresh_token")
+    expires_in = token_data.get("expires_in", 3600)
+    expires_at = time.time() + expires_in
+
+    database.update_user_oauth_token(
+        target_id=state,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        expires_at=expires_at
+    )
+
+    frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:8000")
+    return RedirectResponse(f"{frontend_url}/integrations?connected=google")
