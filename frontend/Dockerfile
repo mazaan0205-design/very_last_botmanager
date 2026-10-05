@@ -44,4 +44,4 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 EXPOSE 80
 
 # 10. Clear cache, create database, run migrations, and start Apache web server safely
-CMD ["sh", "-c", "mkdir -p database && touch database/database.sqlite && php artisan config:clear && php artisan cache:clear && php artisan migrate --force && apache2-foreground"]
+CMD ["sh", "-c", "mkdir -p database && touch database/database.sqlite && php artisan config:clear && php artisan cache:clear && CACHE_DRIVER=array SESSION_DRIVER=file php artisan migrate --force && CACHE_DRIVER=array SESSION_DRIVER=file apache2-foreground"]
