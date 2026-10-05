@@ -43,5 +43,5 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 EXPOSE 80
 
-# 10. Force absolute SQLite path, clear cache, run migrations, and start Apache web server
-CMD ["sh", "-c", "mkdir -p /opt/render/project/src/database && touch /opt/render/project/src/database/database.sqlite && DB_DATABASE=/opt/render/project/src/database/database.sqlite php artisan config:clear && DB_DATABASE=/opt/render/project/src/database/database.sqlite php artisan cache:clear && DB_DATABASE=/opt/render/project/src/database/database.sqlite php artisan migrate --force && DB_DATABASE=/opt/render/project/src/database/database.sqlite apache2-foreground"]
+# 10. Run migrations first, then clear cache/config, and finally start Apache
+CMD ["sh", "-c", "mkdir -p /opt/render/project/src/database && touch /opt/render/project/src/database/database.sqlite && DB_DATABASE=/opt/render/project/src/database/database.sqlite php artisan migrate --force && DB_DATABASE=/opt/render/project/src/database/database.sqlite php artisan config:clear && DB_DATABASE=/opt/render/project/src/database/database.sqlite php artisan cache:clear && DB_DATABASE=/opt/render/project/src/database/database.sqlite apache2-foreground"]
