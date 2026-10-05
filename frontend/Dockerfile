@@ -28,8 +28,8 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # 6. Run dependency installation (skipping custom post-install scripts)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# 7. Create the empty SQLite database file
-RUN mkdir -p database && touch database/database.sqlite
+# 7. Create the empty SQLite database file during build time
+RUN mkdir -p /var/www/html/database && touch /var/www/html/database/database.sqlite
 
 # 8. Explicitly create missing Laravel system storage and bootstrap folders
 RUN mkdir -p storage/framework/cache/data \
@@ -43,5 +43,5 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 EXPOSE 80
 
-# 10. Clear cache, create database, run migrations, and start Apache web server safely
-CMD ["sh", "-c", "mkdir -p database && touch database/database.sqlite && php artisan config:clear && php artisan cache:clear && CACHE_DRIVER=array SESSION_DRIVER=file php artisan migrate --force && CACHE_DRIVER=array SESSION_DRIVER=file apache2-foreground"]
+# 10. Run migrations and start Apache server
+CMD ["sh", "-c", "php artisan config:clear && php artisan cache:clear && php artisan migrate --force && apache2-foreground"]
