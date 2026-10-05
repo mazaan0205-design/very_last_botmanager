@@ -29,7 +29,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # 7. Create the empty SQLite database file during build time
-RUN mkdir -p /var/www/html/database && touch /var/www/html/database/database.sqlite
+RUN mkdir -p /opt/render/project/src/database && touch /opt/render/project/src/database/database.sqlite
 
 # 8. Explicitly create missing Laravel system storage and bootstrap folders
 RUN mkdir -p storage/framework/cache/data \
@@ -39,9 +39,9 @@ RUN mkdir -p storage/framework/cache/data \
              bootstrap/cache
 
 # 9. Set proper application permissions securely
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /opt/render/project/src/database
 
 EXPOSE 80
 
-# 10. Run migrations and start Apache server
-CMD ["sh", "-c", "php artisan config:clear && php artisan cache:clear && php artisan migrate --force && apache2-foreground"]
+# 10. Force absolute SQLite path, clear cache, run migrations, and start Apache web server
+CMD ["sh", "-c", "mkdir -p /opt/render/project/src/database && touch /opt/render/project/src/database/database.sqlite && DB_DATABASE=/opt/render/project/src/database/database.sqlite php artisan config:clear && DB_DATABASE=/opt/render/project/src/database/database.sqlite php artisan cache:clear && DB_DATABASE=/opt/render/project/src/database/database.sqlite php artisan migrate --force && DB_DATABASE=/opt/render/project/src/database/database.sqlite apache2-foreground"]
