@@ -17,7 +17,7 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.
 WORKDIR /var/www/html
 COPY . .
 
-# 4. FIX: Automatically intercept local URLs and rewrite them to your live Render backend
+# 4. Automatically intercept local URLs and rewrite them to your live Render backend
 RUN find . -type f -not -path '*/.*' -exec sed -i 's|127.0.0.1:8001|very-last-botmanager.onrender.com|g' {} + \
     && find . -type f -not -path '*/.*' -exec sed -i 's|localhost:8001|very-last-botmanager.onrender.com|g' {} + \
     && find . -type f -not -path '*/.*' -exec sed -i 's|http://very-last-botmanager.onrender.com|https://very-last-botmanager.onrender.com|g' {} +
@@ -43,6 +43,5 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 EXPOSE 80
 
-# 10. Clear configuration cache on boot, run migrations, then start Apache
-CMD php artisan config:clear && php artisan cache:clear && php artisan migrate --force && apache2-foregroundpache
-CMD php artisan migrate --force && apache2-foreground
+# 10. Clear cache, run database migrations, and start Apache web server
+CMD sh -c "php artisan config:clear && php artisan cache:clear && php artisan migrate --force && apache2-foreground"
