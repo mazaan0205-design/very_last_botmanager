@@ -1,0 +1,417 @@
+import os
+import json
+import base64
+import time
+import datetime
+import logging
+from email.mime.text import MIMEText
+from urllib.parse import urlencode
+from typing import Optional, List, Dict, Any
+import requests
+import database
+from fastapi import APIRouter, HTTPException, Query, Request
+from pydantic import BaseModel
+
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+
+router = APIRouter(prefix="/api/integrations", tags=["Integrations"])
+
+
+def get_valid_token(target_id: str) -> Optional[str]:
+    """
+    Retrieves a valid Google OAuth access token for the given user/owner.
+    If the access token is expired, it attempts to refresh it using the stored refresh token.
+    """
+    token_data = database.get_user_oauth_token(target_id)
+    if not token_data:
+        # Fallback check if target_id itself is already a raw token string passed in testing
+        if len(target_id) > 40 and not target_id.startswith("owner_") and not target_id.startswith("session_"):
+            return target_id
+        return None
+
+    access_token = token_data.get("access_token")
+    refresh_token = token_data.get("refresh_token")
+    expires_at = token_data.get("expires_at", 0)
+
+    # Check if token is expired or expiring within 60 seconds
+    if time.time() >= (expires_at - 60) and refresh_token:
+        try:
+            payload = {
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "refresh_token": refresh_token,
+                "grant_type": "refresh_token"
+            }
+            response = requests.post(GOOGLE_TOKEN_URL, data=payload, timeout=10)
+            if response.status_code == 200:
+                new_data = response.json()
+                access_token = new_data.get("access_token")
+                expires_in = new_data.get("expires_in", 3600)
+                
+                # Update stored token in database
+                database.update_user_oauth_token(
+                    target_id, 
+                    access_token=access_token, 
+                    expires_at=time.time() + expires_in
+                )
+            else:
+                print(f"[OAuth Refresh Error]: {response.text}")
+                return None
+        except Exception as e:
+            print(f"[OAuth Exception]: {e}")
+            return None
+
+    return access_token
+
+
+# --- GMAIL INTEGRATIONS ---
+
+def get_recent_emails(target_id: str, max_results: int = 5) -> str:
+    """Fetch recent inbox emails from Gmail API."""
+    url = f"https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults={max_results}&q=label:INBOX"
+    headers = {"Authorization": f"Bearer {target_id}"}
+    
+    try:
+        res = requests.get(url, headers=headers, timeout=10)
+        if res.status_code != 200:
+            return f"Error fetching emails: {res.text}"
+        
+        data = res.json()
+        messages = data.get("messages", [])
+        if not messages:
+            return "No recent messages found in inbox."
+
+        summaries = []
+        for msg in messages:
+            msg_id = msg["id"]
+            detail_url = f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{msg_id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date"
+            detail_res = requests.get(detail_url, headers=headers, timeout=5)
+            if detail_res.status_code == 200:
+                m_data = detail_res.json()
+                headers_list = m_data.get("payload", {}).get("headers", [])
+                subject = next((h["value"] for h in headers_list if h["name"] == "Subject"), "No Subject")
+                sender = next((h["value"] for h in headers_list if h["name"] == "From"), "Unknown Sender")
+                snippet = m_data.get("snippet", "")
+                summaries.append(f"- From: {sender} | Subject: {subject} | Snippet: {snippet}")
+
+        return "Recent Emails:\n" + "\n".join(summaries)
+    except Exception as e:
+        return f"Exception while fetching emails: {e}"
+
+
+def send_email(target_id_or_token: str, to: str, subject: str, body: str) -> str:
+    """Send an outbound email via Gmail API."""
+    message = MIMEText(body)
+    message["To"] = to
+    message["Subject"] = subject
+    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
+
+    url = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send"
+    headers = {
+        "Authorization": f"Bearer {target_id_or_token}",
+        "Content-Type": "application/json"
+    }
+    payload = {"raw": raw_message}
+
+    try:
+        res = requests.post(url, headers=headers, json=payload, timeout=10)
+        if res.status_code in [200, 201]:
+            return f"Successfully sent email to {to} with subject '{subject}'."
+        return f"Failed to send email: {res.text}"
+    except Exception as e:
+        return f"Exception while sending email: {e}"
+
+
+# --- GOOGLE CALENDAR INTEGRATIONS ---
+
+def get_calendar_events(target_id: str, max_results: int = 5) -> str:
+    """Retrieve upcoming Google Calendar events."""
+    now_iso = datetime.datetime.utcnow().isoformat() + "Z"
+    url = f"https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin={now_iso}&maxResults={max_results}&singleEvents=true&orderBy=startTime"
+    headers = {"Authorization": f"Bearer {target_id}"}
+
+    try:
+        res = requests.get(url, headers=headers, timeout=10)
+        if res.status_code != 200:
+            return f"Error fetching calendar events: {res.text}"
+
+        items = res.json().get("items", [])
+        if not items:
+            return "No upcoming calendar events found."
+
+        event_list = []
+        for event in items:
+            summary = event.get("summary", "Untitled Event")
+            start = event.get("start", {}).get("dateTime", event.get("start", {}).get("date", ""))
+            end = event.get("end", {}).get("dateTime", event.get("end", {}).get("date", ""))
+            event_list.append(f"- {summary} (From: {start} To: {end})")
+
+        return "Upcoming Calendar Events:\n" + "\n".join(event_list)
+    except Exception as e:
+        return f"Exception while fetching calendar events: {e}"
+
+
+def create_calendar_event(
+    target_id_or_token: str, 
+    summary: str, 
+    start_time: str, 
+    end_time: str, 
+    description: str = "", 
+    attendees: List[str] = []
+) -> str:
+    """Schedule a new meeting or event on Google Calendar."""
+    url = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
+    headers = {
+        "Authorization": f"Bearer {target_id_or_token}",
+        "Content-Type": "application/json"
+    }
+    
+    event_body = {
+        "summary": summary,
+        "description": description,
+        "start": {"dateTime": start_time},
+        "end": {"dateTime": end_time},
+        "attendees": [{"email": email} for email in attendees]
+    }
+
+    try:
+        res = requests.post(url, headers=headers, json=event_body, timeout=10)
+        if res.status_code in [200, 201]:
+            event_data = res.json()
+            return f"Successfully scheduled event '{summary}' (ID: {event_data.get('id')})."
+        return f"Failed to create calendar event: {res.text}"
+    except Exception as e:
+        return f"Exception while creating calendar event: {e}"
+
+
+# --- GOOGLE DRIVE INTEGRATIONS ---
+
+def search_drive_files(target_id: str, query: str = "", max_results: int = 5) -> str:
+    """Search for files or documents in Google Drive."""
+    q_param = f"fullText contains '{query}'" if query else ""
+    url = f"https://www.googleapis.com/drive/v3/files?pageSize={max_results}"
+    if q_param:
+        url += f"&q={requests.utils.quote(q_param)}"
+
+    headers = {"Authorization": f"Bearer {target_id}"}
+
+    try:
+        res = requests.get(url, headers=headers, timeout=10)
+        if res.status_code != 200:
+            return f"Error searching drive files: {res.text}"
+
+        files = res.json().get("files", [])
+        if not files:
+            return "No matching Google Drive files found."
+
+        file_list = [f"- {f.get('name')} (ID: {f.get('id')}, Type: {f.get('mimeType')})" for f in files]
+        return "Google Drive Search Results:\n" + "\n".join(file_list)
+    except Exception as e:
+        return f"Exception while searching Google Drive: {e}"
+
+
+# --- FASTAPI ENDPOINTS ---
+
+class SendEmailRequest(BaseModel):
+    target_id: str
+    to: str
+    subject: str
+    body: str
+
+class CreateEventRequest(BaseModel):
+    target_id: str
+    summary: str
+    start_time: str
+    end_time: str
+    description: Optional[str] = ""
+    attendees: Optional[List[str]] = []
+
+
+@router.get("/gmail/recent")
+def api_get_recent_emails(target_id: str = Query(..., description="User ID or OAuth Token"), max_results: int = 5):
+    token = get_valid_token(target_id)
+    if not token:
+        raise HTTPException(status_code=400, detail="Invalid or missing OAuth token.")
+    return {"result": get_recent_emails(token, max_results)}
+
+
+@router.post("/gmail/send")
+def api_send_email(payload: SendEmailRequest):
+    token = get_valid_token(payload.target_id)
+    if not token:
+        raise HTTPException(status_code=400, detail="Invalid or missing OAuth token.")
+    result = send_email(token, payload.to, payload.subject, payload.body)
+    return {"result": result}
+
+
+@router.get("/calendar/events")
+def api_get_calendar_events(target_id: str = Query(..., description="User ID or OAuth Token"), max_results: int = 5):
+    token = get_valid_token(target_id)
+    if not token:
+        raise HTTPException(status_code=400, detail="Invalid or missing OAuth token.")
+    return {"result": get_calendar_events(token, max_results)}
+
+
+@router.post("/calendar/events")
+def api_create_calendar_event(payload: CreateEventRequest):
+    token = get_valid_token(payload.target_id)
+    if not token:
+        raise HTTPException(status_code=400, detail="Invalid or missing OAuth token.")
+    result = create_calendar_event(
+        token, 
+        payload.summary, 
+        payload.start_time, 
+        payload.end_time, 
+        payload.description, 
+        payload.attendees
+    )
+    return {"result": result}
+
+
+@router.get("/drive/search")
+def api_search_drive_files(target_id: str = Query(..., description="User ID or OAuth Token"), query: str = "", max_results: int = 5):
+    token = get_valid_token(target_id)
+    if not token:
+        raise HTTPException(status_code=400, detail="Invalid or missing OAuth token.")
+    return {"result": search_drive_files(token, query, max_results)}
+
+
+# --- INTEGRATION STATUS / CONNECT / DISCONNECT ---
+# These power the /integrations page in the frontend. Previously the frontend
+# called endpoints (`/integrations/status`, `/integrations/{provider}/connect`)
+# that had no backend implementation at all, so the page always showed every
+# provider as disconnected and "Connect account" silently failed.
+
+GOOGLE_REDIRECT_URI = os.environ.get(
+    "GOOGLE_REDIRECT_URI",
+    os.environ.get("GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:8000/auth/google/callback"),
+)
+
+
+# --- GOOGLE TOKEN EXCHANGE ---
+# Called server-to-server by the Laravel /integrations page (which receives the
+# ?code= from Google) and by /auth/google/callback. Shared so both paths use the
+# exact same GOOGLE_REDIRECT_URI when exchanging the code.
+
+def _safe_google_token_error(response) -> str:
+    """Extracts Google's error/error_description for user-facing messages.
+    Token error payloads contain no secrets, but we never echo the request."""
+    try:
+        data = response.json()
+        error = data.get("error", "unknown_error")
+        description = data.get("error_description", "")
+        return f"{error}: {description}" if description else error
+    except Exception:
+        return f"google_http_{response.status_code}"
+
+
+def exchange_google_code(code: str, owner_id: str) -> Dict[str, Any]:
+    """Exchanges an OAuth authorization code for Google tokens and persists them
+    for owner_id. The code, client secret and tokens are never logged or returned."""
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        raise HTTPException(
+            status_code=500,
+            detail="Google OAuth is not configured (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET missing on the backend).",
+        )
+
+    payload = {
+        "code": code,
+        "client_id": GOOGLE_CLIENT_ID,
+        "client_secret": GOOGLE_CLIENT_SECRET,
+        # MUST byte-for-byte match the redirect_uri used to start the flow,
+        # otherwise Google returns redirect_uri_mismatch.
+        "redirect_uri": GOOGLE_REDIRECT_URI,
+        "grant_type": "authorization_code",
+    }
+    try:
+        response = requests.post(GOOGLE_TOKEN_URL, data=payload, timeout=15)
+    except Exception:
+        logging.exception("Google token exchange network error (owner=%s)", owner_id)
+        raise HTTPException(status_code=502, detail="Could not reach Google to complete the connection. Check the backend logs.")
+
+    if response.status_code != 200:
+        safe_error = _safe_google_token_error(response)
+        logging.error(
+            "Google token exchange failed for owner=%s (http %s): %s",
+            owner_id, response.status_code, safe_error,
+        )
+        raise HTTPException(status_code=400, detail=f"Google rejected the connection ({safe_error}). Please try connecting again.")
+
+    token_data = response.json()
+    access_token = token_data.get("access_token")
+    if not access_token:
+        logging.error("Google token exchange response missing access_token (owner=%s)", owner_id)
+        raise HTTPException(status_code=502, detail="Google returned an unexpected token response. Check the backend logs.")
+
+    database.update_user_oauth_token(
+        target_id=owner_id,
+        access_token=access_token,
+        refresh_token=token_data.get("refresh_token"),
+        expires_at=time.time() + token_data.get("expires_in", 3600),
+    )
+    logging.info("Google tokens saved for owner=%s (tokens themselves are never logged).", owner_id)
+    return {"status": "connected", "provider": "google", "connected": True}
+
+
+@router.get("/google/exchange")
+def api_google_exchange(code: str, state: str, request: Request):
+    """Server-to-server code exchange used by the Laravel /integrations page.
+    The `state` value is the owner_id that started the OAuth flow."""
+    expected_token = os.environ.get("RUNTIME_SERVICE_TOKEN", "")
+    if expected_token and request.headers.get("X-Runtime-Service-Token", "") != expected_token:
+        raise HTTPException(status_code=403, detail="Not authorized to exchange Google codes.")
+    return exchange_google_code(code=code, owner_id=state)
+
+
+@router.get("/status")
+def api_integration_status(owner_id: str = Query("default_owner")):
+    """Reports which providers this owner has connected. Only Google is
+    wired up on the backend today; Slack/Notion are returned as
+    not-configured so the UI can show them as 'Coming soon' instead of
+    silently erroring."""
+    token = get_valid_token(owner_id)
+    return {
+        "integrations": [
+            {"id": "google", "connected": bool(token), "configured": True},
+            {"id": "slack", "connected": False, "configured": False},
+            {"id": "notion", "connected": False, "configured": False},
+        ]
+    }
+
+
+@router.get("/{provider}/connect")
+def api_integration_connect(provider: str, owner_id: str = Query("default_owner")):
+    """Returns a JSON authorization_url for the given provider, matching
+    what the integrations page expects (it does window.location.assign on
+    the returned URL rather than following a redirect)."""
+    if provider != "google":
+        raise HTTPException(status_code=400, detail=f"'{provider}' is not connected yet — coming soon.")
+
+    google_client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
+    scope = (
+        "https://www.googleapis.com/auth/gmail.readonly "
+        "https://www.googleapis.com/auth/gmail.send "
+        "https://www.googleapis.com/auth/calendar "
+        "https://www.googleapis.com/auth/drive.readonly"
+    )
+    params = urlencode({
+        "response_type": "code",
+        "client_id": google_client_id,
+        "redirect_uri": GOOGLE_REDIRECT_URI,
+        "scope": scope,
+        "access_type": "offline",
+        "prompt": "consent",
+        "state": owner_id,
+    })
+    authorization_url = f"https://accounts.google.com/o/oauth2/v2/auth?{params}"
+    return {"authorization_url": authorization_url}
+
+
+@router.delete("/{provider}")
+def api_integration_disconnect(provider: str, owner_id: str = Query("default_owner")):
+    if provider != "google":
+        raise HTTPException(status_code=400, detail=f"'{provider}' was never connected.")
+    removed = database.clear_user_oauth_token(owner_id)
+    return {"message": "Disconnected" if removed else "Nothing to disconnect", "provider": provider}
